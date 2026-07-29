@@ -1,0 +1,552 @@
+<title>GrantRadar — grants you can actually apply for</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    /* blue-biased neutrals — chosen, not defaulted */
+    --paper: #f4f6fb;
+    --card: #ffffff;
+    --card-2: #f9fafe;
+    --ink: #0f1729;
+    --ink-2: #475069;
+    --ink-3: #7a839c;
+    --line: #e3e8f2;
+    --line-2: #eef1f8;
+    /* brand: signal blue (radar) */
+    --accent: #2f6ded;
+    --accent-ink: #1b52c4;
+    --accent-wash: #eaf1fe;
+    /* semantics — separate from accent */
+    --ok: #0f9d63;
+    --ok-wash: #e5f6ee;
+    --warn: #d97a06;
+    --warn-wash: #fdf1e0;
+    --bad: #d43d51;
+    --bad-wash: #fdeaec;
+    --lock: #8a93aa;
+    --radar-1: rgba(47,109,237,.0);
+    --radar-2: rgba(47,109,237,.22);
+    --shadow: 0 1px 2px rgba(16,23,41,.04), 0 8px 24px rgba(16,23,41,.06);
+    --shadow-lg: 0 12px 40px rgba(16,23,41,.14);
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0a0f1c;
+      --card: #121a2b;
+      --card-2: #0f1626;
+      --ink: #e9eefa;
+      --ink-2: #a4afc7;
+      --ink-3: #6f7a94;
+      --line: #24304a;
+      --line-2: #1a2338;
+      --accent: #5c8cff;
+      --accent-ink: #86a8ff;
+      --accent-wash: #16233f;
+      --ok: #35c98a;
+      --ok-wash: #10241c;
+      --warn: #eaa441;
+      --warn-wash: #2a2012;
+      --bad: #f0697c;
+      --bad-wash: #2a1519;
+      --lock: #6b7590;
+      --radar-2: rgba(92,140,255,.26);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.4);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#f4f6fb;--card:#fff;--card-2:#f9fafe;--ink:#0f1729;--ink-2:#475069;--ink-3:#7a839c;
+    --line:#e3e8f2;--line-2:#eef1f8;--accent:#2f6ded;--accent-ink:#1b52c4;--accent-wash:#eaf1fe;
+    --ok:#0f9d63;--ok-wash:#e5f6ee;--warn:#d97a06;--warn-wash:#fdf1e0;--bad:#d43d51;--bad-wash:#fdeaec;
+    --lock:#8a93aa;--radar-2:rgba(47,109,237,.22);
+    --shadow:0 1px 2px rgba(16,23,41,.04),0 8px 24px rgba(16,23,41,.06);--shadow-lg:0 12px 40px rgba(16,23,41,.14);
+  }
+  :root[data-theme="dark"] {
+    --paper:#0a0f1c;--card:#121a2b;--card-2:#0f1626;--ink:#e9eefa;--ink-2:#a4afc7;--ink-3:#6f7a94;
+    --line:#24304a;--line-2:#1a2338;--accent:#5c8cff;--accent-ink:#86a8ff;--accent-wash:#16233f;
+    --ok:#35c98a;--ok-wash:#10241c;--warn:#eaa441;--warn-wash:#2a2012;--bad:#f0697c;--bad-wash:#2a1519;
+    --lock:#6b7590;--radar-2:rgba(92,140,255,.26);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.4);--shadow-lg:0 12px 40px rgba(0,0,0,.55);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    font-feature-settings: "kern";
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 40;
+  }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 13px 0; }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 750; letter-spacing: -.02em; font-size: 18px; }
+  .radar { width: 30px; height: 30px; position: relative; flex: none; }
+  .brand small { font: 600 10px/1 var(--mono); letter-spacing: .16em; color: var(--ink-3); text-transform: uppercase; margin-left: 2px; }
+  .spacer { flex: 1; }
+  .theme-btn {
+    font: 600 12px/1 var(--mono); letter-spacing: .04em; color: var(--ink-2);
+    background: var(--card-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 11px; cursor: pointer;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 40px 0 20px; }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 44px); line-height: 1.04; letter-spacing: -.03em;
+    margin: 0 0 14px; text-wrap: balance; font-weight: 780;
+  }
+  .hero h1 .hl { color: var(--accent); }
+  .hero p.lede { font-size: clamp(15px, 2.2vw, 18px); color: var(--ink-2); max-width: 62ch; margin: 0; }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    font: 600 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent-ink); background: var(--accent-wash);
+    padding: 7px 11px; border-radius: 999px;
+  }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{ opacity:.35; transform:scale(.8);} 50%{ opacity:1; transform:scale(1.15);} }
+
+  /* ---------- app grid ---------- */
+  .app { display: grid; grid-template-columns: 300px 1fr; gap: 22px; padding: 26px 0 70px; align-items: start; }
+  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+
+  /* ---------- profile panel ---------- */
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .panel.sticky { position: sticky; top: 74px; }
+  @media (max-width: 860px) { .panel.sticky { position: static; } }
+  .panel-head {
+    padding: 15px 16px; border-bottom: 1px solid var(--line-2);
+    font: 600 11px/1 var(--mono); letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-body { padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+  .field label {
+    display: block; font: 600 12px/1 var(--sans); color: var(--ink-2); margin-bottom: 7px;
+  }
+  select, .chips { width: 100%; }
+  select {
+    appearance: none; width: 100%; padding: 10px 34px 10px 12px; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--card-2); color: var(--ink);
+    font: 500 14px var(--sans); cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%237a839c' stroke-width='1.6' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  select:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    font: 600 12px var(--sans); padding: 7px 11px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--card-2); color: var(--ink-2);
+    transition: all .12s ease; user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  :root[data-theme="dark"] .chip[aria-pressed="true"],
+  @media (prefers-color-scheme: dark) { }
+  .hint { font: 500 12px var(--sans); color: var(--ink-3); margin: -6px 0 0; }
+
+  /* ---------- results ---------- */
+  .summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;
+  }
+  @media (max-width: 520px){ .summary{ grid-template-columns: 1fr; } }
+  .stat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 15px;
+    box-shadow: var(--shadow);
+  }
+  .stat .n { font: 700 26px/1 var(--mono); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat.good .n { color: var(--ok); }
+  .stat .l { font: 600 11px/1.3 var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); margin-top: 7px; }
+
+  .results-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px;
+  }
+  .results-head h2 { font-size: 16px; margin: 0; letter-spacing: -.01em; }
+  .results-head .scan { font: 600 11px var(--mono); color: var(--ink-3); letter-spacing: .05em; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 13px;
+    box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden;
+    display: grid; grid-template-columns: 5px 1fr; transition: box-shadow .15s, transform .15s;
+  }
+  .card:hover { box-shadow: var(--shadow-lg); }
+  .stripe { background: var(--line); }
+  .card.ok .stripe { background: var(--ok); }
+  .card.soon .stripe { background: var(--warn); }
+  .card.no .stripe { background: var(--bad); }
+  .card-in { padding: 15px 16px; min-width: 0; }
+  .card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .card-title { font-size: 15.5px; font-weight: 680; letter-spacing: -.01em; margin: 0; line-height: 1.3; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 7px; font: 500 12px var(--sans); color: var(--ink-3); }
+  .meta .agency { color: var(--ink-2); font-weight: 600; }
+  .plain { font-size: 13.5px; color: var(--ink-2); margin: 11px 0 0; max-width: 66ch; }
+
+  .score { flex: none; text-align: center; width: 58px; }
+  .ring { --p: 0; width: 46px; height: 46px; margin: 0 auto; border-radius: 50%;
+    background: conic-gradient(var(--accent) calc(var(--p)*1%), var(--line-2) 0);
+    display: grid; place-items: center; }
+  .ring::after { content: ""; position: absolute; }
+  .ring b { width: 36px; height: 36px; border-radius: 50%; background: var(--card);
+    display: grid; place-items: center; font: 700 14px var(--mono); font-variant-numeric: tabular-nums; }
+  .score small { display: block; font: 600 9px var(--mono); letter-spacing: .08em; color: var(--ink-3); text-transform: uppercase; margin-top: 5px; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .pill {
+    font: 600 11px var(--sans); padding: 4px 9px; border-radius: 7px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .pill.good { background: var(--ok-wash); color: var(--ok); }
+  .pill.warn { background: var(--warn-wash); color: var(--warn); }
+  .pill.bad { background: var(--bad-wash); color: var(--bad); }
+  .pill.neutral { background: var(--card-2); color: var(--ink-2); border: 1px solid var(--line); }
+  .pill.status { font-family: var(--mono); letter-spacing: .04em; text-transform: uppercase; font-size: 10px; }
+
+  .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px;
+    padding-top: 12px; border-top: 1px solid var(--line-2); }
+  .award { font: 700 14px var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .award span { font: 500 11px var(--sans); color: var(--ink-3); letter-spacing: 0; }
+  .src { font: 600 12px var(--mono); color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+  .src:hover { color: var(--accent-ink); text-decoration: underline; }
+  .hist { font: 500 11.5px var(--sans); color: var(--ink-3); margin-top: 9px; display: flex; align-items: center; gap: 6px; }
+  .hist b { color: var(--ink-2); font: 700 11.5px var(--mono); }
+
+  /* ---------- paywall ---------- */
+  .locked { position: relative; }
+  .locked .card { filter: blur(3px); opacity: .5; pointer-events: none; user-select: none; }
+  .paywall {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 20px;
+    background: linear-gradient(180deg, color-mix(in srgb,var(--paper) 10%,transparent), var(--paper) 62%);
+  }
+  .paywall-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-lg);
+    padding: 26px 28px; text-align: center; max-width: 400px; margin-top: 40px;
+  }
+  .paywall-card h3 { margin: 0 0 6px; font-size: 20px; letter-spacing: -.02em; }
+  .paywall-card p { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
+  .price { font: 700 15px var(--mono); color: var(--ink); }
+  .cta {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff;
+    border: none; border-radius: 10px; padding: 12px 20px; font: 700 14px var(--sans); cursor: pointer;
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .cta:hover { background: var(--accent-ink); }
+  .demo-toggle {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+    font: 600 12px var(--mono); color: var(--ink-3); cursor: pointer; letter-spacing: .03em;
+  }
+  .switch { width: 34px; height: 19px; border-radius: 99px; background: var(--line); position: relative; transition: background .15s; flex: none; }
+  .switch b { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .demo-toggle[aria-pressed="true"] .switch { background: var(--accent); }
+  .demo-toggle[aria-pressed="true"] .switch b { left: 17px; }
+
+  .empty { text-align: center; padding: 44px 20px; color: var(--ink-3); }
+  .empty p { margin: 6px 0 0; font-size: 14px; }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--line); background: var(--card-2); }
+  .foot { padding: 26px 0 40px; color: var(--ink-3); font-size: 12.5px; }
+  .foot h4 { color: var(--ink-2); font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; }
+  .foot a { color: var(--accent); text-decoration: none; }
+  .foot code { font: 500 11.5px var(--mono); background: var(--line-2); padding: 2px 6px; border-radius: 5px; color: var(--ink-2); }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 26px; }
+  @media (max-width: 640px){ .foot-grid { grid-template-columns: 1fr; } }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<header>
+  <div class="wrap bar">
+    <div class="brand">
+      <canvas class="radar" id="radar" width="60" height="60" aria-hidden="true"></canvas>
+      <span>GrantRadar<small>demo</small></span>
+    </div>
+    <div class="spacer"></div>
+    <button class="theme-btn" id="themeBtn" type="button">◐ Theme</button>
+  </div>
+</header>
+
+<div class="wrap hero">
+  <span class="kicker"><span class="pulse"></span> Live eligibility engine</span>
+  <h1>Every grant scattered across 3,000 government sites — <span class="hl">filtered to the ones you can actually win.</span></h1>
+  <p class="lede">Tell us who you are once. We scan federal, state, and local funding and rank only what you're eligible for — with the deadline, the dollars, and a link to the official source. No jargon, no dead ends.</p>
+</div>
+
+<div class="wrap app">
+  <!-- PROFILE -->
+  <aside class="panel sticky">
+    <div class="panel-head">◎ Your profile</div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="state">Where are you based?</label>
+        <select id="state"></select>
+      </div>
+      <div class="field">
+        <label for="entity">What are you?</label>
+        <select id="entity"></select>
+      </div>
+      <div class="field">
+        <label>What do you need funding for?</label>
+        <div class="chips" id="uses"></div>
+        <p class="hint">Pick any that apply — this ranks, it doesn't exclude.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RESULTS -->
+  <main>
+    <div class="summary">
+      <div class="stat"><div class="n" id="s-scanned">0</div><div class="l">Grants scanned</div></div>
+      <div class="stat good"><div class="n" id="s-elig">0</div><div class="l">You can apply</div></div>
+      <div class="stat"><div class="n" id="s-money">$0</div><div class="l">Total available to you</div></div>
+    </div>
+
+    <div class="results-head">
+      <h2 id="rh">Matches</h2>
+      <span class="scan" id="scan">scanning…</span>
+    </div>
+
+    <div id="free"></div>
+    <div class="locked" id="lockedWrap" hidden>
+      <div id="lockedList"></div>
+      <div class="paywall">
+        <div class="paywall-card">
+          <h3 id="pw-h">Unlock all your matches</h3>
+          <p id="pw-p">You have more eligible grants below. GrantRadar Pro shows every match, emails you the moment a new one opens, and pings you before each deadline.</p>
+          <button class="cta" type="button">Go Pro — <span class="price">&nbsp;$19/mo</span></button>
+          <div class="demo-toggle" id="proToggle" role="button" tabindex="0" aria-pressed="false">
+            <span class="switch"><b></b></span> Preview Pro (demo)
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="empty" id="empty" hidden>
+      <strong>No eligible grants for this profile.</strong>
+      <p>Try a different state or entity type — the demo dataset is small on purpose.</p>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <div class="foot-grid">
+      <div>
+        <h4>What this is</h4>
+        <p>A working prototype of a paid grant-discovery service for US small businesses, founders, and nonprofits. The eligibility engine, ranking, deadline logic, and paywall are all live in this page. Change your profile on the left and the results re-rank instantly — that instant "here are <em>your</em> 3 grants out of 500" is the thing people pay for and a Google search can't do.</p>
+        <p style="margin-top:12px">The <strong>Total available to you</strong> figure sums the award ceilings of grants you're eligible for — the number that makes a $19/month subscription feel free.</p>
+      </div>
+      <div>
+        <h4>Where the data comes from</h4>
+        <p>These records are modeled on <strong>real</strong> US programs (USDA REAP, DOE SBIR, EPA EJ, CalSEED, NYSERDA, HUD CDBG…) in the exact schema the live pipeline produces. Federal data is free and key-less via <code>grants.gov</code> and <code>usaspending.gov</code>; state/local is added by targeted scraping + AI extraction.</p>
+        <p style="margin-top:12px">Run the real pipeline: <code>python fetch_federal.py --keyword solar --enrich</code>. Every grant keeps its <strong>official source link</strong> — GrantRadar is the map, the government site is the destination.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------- data (schema-identical to backend Grant.to_dict) ----------
+const TODAY = new Date("2026-07-15T00:00:00");
+const GRANTS = SEED_PLACEHOLDER;
+
+const ENTITY = [
+  ["small_business","Small business"],["startup","Startup"],["nonprofit","Nonprofit"],
+  ["farmer","Farmer / ag producer"],["local_government","Local government"],
+  ["individual","Individual"],["tribal","Tribal entity"],["research_institution","Research institution"],
+];
+const USES = [
+  ["clean_energy","Clean energy"],["solar","Solar"],["energy_efficiency","Efficiency"],
+  ["ev_charging","EV charging"],["rd_innovation","R&D / innovation"],["hiring_training","Hiring & training"],
+  ["agriculture","Agriculture"],["broadband","Broadband"],["disaster_recovery","Disaster recovery"],
+  ["arts_culture","Arts & culture"],["housing","Housing"],["general_operating","Operating"],
+];
+const STATES = ["CA","TX","NY","FL","IL","PA","OH","GA","NC","MI","WA","AZ","MA","CO","OR","MN","WI","VA","NJ","TN"];
+const LBL = Object.fromEntries([...ENTITY, ...USES]);
+const label = t => LBL[t] || t.replace(/_/g," ");
+
+// ---------- state ----------
+const profile = { state:"CA", entity_type:"startup", use_cases:["clean_energy","rd_innovation","solar"] };
+let proPreview = false;
+
+// ---------- match engine (mirrors backend/match.py) ----------
+function daysLeft(close){ if(!close) return null; const d=new Date(close+"T00:00:00"); return Math.round((d-TODAY)/864e5); }
+function scoreGrant(g){
+  let score=50; const reasons=[], dq=[];
+  const st=g.eligibility_states||[];
+  if(st.length===0){ score+=10; reasons.push(["good","Open nationwide"]); }
+  else if(profile.state && st.includes(profile.state)){ score+=25; reasons.push(["good",`Available in ${profile.state}`]); }
+  else if(profile.state){ dq.push(`Restricted to ${st.join(", ")} — not ${profile.state}`); score-=40; }
+
+  const et=g.eligibility_entity_types||[];
+  if(et.length===0){ reasons.push(["neutral","No entity restriction"]); }
+  else if(profile.entity_type && et.includes(profile.entity_type)){ score+=25; reasons.push(["good",`Fits ${label(profile.entity_type)}`]); }
+  else if(profile.entity_type){ dq.push(`For ${et.map(label).join(", ")} — not ${label(profile.entity_type)}`); score-=35; }
+
+  const overlap=(g.eligibility_use_cases||[]).filter(u=>profile.use_cases.includes(u));
+  if(overlap.length){ score+=15; reasons.push(["good","Funds "+overlap.map(label).join(", ")]); }
+
+  const dl=daysLeft(g.close_date);
+  if(dl!==null){
+    if(dl<0){ dq.push("Deadline has passed"); score-=50; }
+    else if(dl<=14){ reasons.push(["warn",`Closes in ${dl} days`]); }
+    else if(dl<=45){ reasons.push(["neutral",`${dl} days to apply`]); }
+  }
+  score=Math.max(0,Math.min(100,score));
+  const eligible = dq.length===0 && score>=40;
+  return {score, reasons, dq, dl, eligible};
+}
+function money(n){ if(n>=1e6) return "$"+(n/1e6).toFixed(n%1e6?1:0)+"M"; if(n>=1e3) return "$"+Math.round(n/1e3)+"k"; return "$"+n; }
+
+// ---------- render ----------
+function render(){
+  const ranked = GRANTS.map(g=>({g, m:scoreGrant(g)}))
+    .sort((a,b)=> (b.m.eligible-a.m.eligible) || (b.m.score-a.m.score));
+  const eligible = ranked.filter(r=>r.m.eligible);
+  const totalMoney = eligible.reduce((s,r)=> s + (r.g.award_max||0), 0);
+
+  document.getElementById("s-scanned").textContent = GRANTS.length;
+  document.getElementById("s-elig").textContent = eligible.length;
+  document.getElementById("s-money").textContent = money(totalMoney);
+  document.getElementById("scan").textContent = `${GRANTS.length} sources · updated today`;
+
+  const freeEl=document.getElementById("free");
+  const lockedWrap=document.getElementById("lockedWrap");
+  const lockedList=document.getElementById("lockedList");
+  const empty=document.getElementById("empty");
+  freeEl.innerHTML=""; lockedList.innerHTML="";
+
+  if(eligible.length===0 && ranked.every(r=>!r.m.eligible)){
+    // show all as ineligible list, still informative
+  }
+  const shown = ranked.filter(r=>r.m.eligible);
+  document.getElementById("rh").textContent = shown.length ? `${shown.length} grant${shown.length>1?"s":""} you can apply for` : "Closest opportunities";
+
+  // free tier: first 2 eligible fully; rest locked
+  const list = shown.length ? shown : ranked.slice(0,4);
+  empty.hidden = list.length>0;
+
+  const FREE_N = 2;
+  const freeItems = proPreview ? list : list.slice(0, FREE_N);
+  const lockItems = proPreview ? [] : list.slice(FREE_N);
+
+  freeItems.forEach(r=> freeEl.appendChild(cardEl(r)));
+
+  if(lockItems.length){
+    lockedWrap.hidden=false;
+    lockItems.forEach(r=> lockedList.appendChild(cardEl(r)));
+    document.getElementById("pw-h").textContent = `Unlock ${lockItems.length} more match${lockItems.length>1?"es":""}`;
+  } else {
+    lockedWrap.hidden=true;
+  }
+}
+
+function cardEl({g,m}){
+  const cls = !m.eligible ? "no" : (m.dl!==null && m.dl<=14 ? "soon" : "ok");
+  const el=document.createElement("article");
+  el.className="card "+cls;
+  const statusPill = g.status==="forecasted"
+     ? `<span class="pill status neutral">Forecasted</span>`
+     : g.status==="closed" ? `<span class="pill status bad">Closed</span>`
+     : `<span class="pill status good">Open</span>`;
+  const reasonPills = m.reasons.map(([k,t])=>`<span class="pill ${k}">${k==="good"?"✓ ":k==="warn"?"⏱ ":""}${t}</span>`).join("");
+  const dqPills = m.dq.map(t=>`<span class="pill bad">✕ ${t}</span>`).join("");
+  const hist = (g.enrichment && g.enrichment.historical_award_median)
+     ? `<div class="hist">◷ Historically funded — median award <b>${money(g.enrichment.historical_award_median)}</b>, up to <b>${money(g.enrichment.historical_award_max)}</b></div>` : "";
+  const award = (g.award_min||g.award_max)
+     ? `<div class="award">${money(g.award_min||0)}–${money(g.award_max||0)} <span>award</span></div>` : `<div class="award"><span>Award varies</span></div>`;
+
+  el.innerHTML = `
+    <div class="stripe"></div>
+    <div class="card-in">
+      <div class="card-top">
+        <div style="flex:1;min-width:0">
+          <h3 class="card-title">${g.title}</h3>
+          <div class="meta">
+            <span class="agency">${g.agency}</span>
+            <span>· ${g.level[0].toUpperCase()+g.level.slice(1)}</span>
+            <span>· ${g.jurisdiction}</span>
+            ${statusPill}
+          </div>
+        </div>
+        <div class="score">
+          <div class="ring" style="--p:${m.score}"><b>${m.score}</b></div>
+          <small>match</small>
+        </div>
+      </div>
+      <p class="plain">${g.summary_plain}</p>
+      <div class="pills">${reasonPills}${dqPills}</div>
+      ${hist}
+      <div class="card-foot">
+        ${award}
+        <a class="src" href="${g.official_url}" target="_blank" rel="noopener">Official page ↗</a>
+      </div>
+    </div>`;
+  return el;
+}
+
+// ---------- radar canvas ----------
+(function(){
+  const c=document.getElementById("radar"); if(!c) return;
+  const x=c.getContext("2d"); let a=0, raf;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function draw(){
+    const w=60,h=60,cx=30,cy=30; x.clearRect(0,0,w,h);
+    x.strokeStyle=css("--radar-2"); x.lineWidth=1.4;
+    for(const r of [9,17,25]){ x.beginPath(); x.arc(cx,cy,r,0,7); x.stroke(); }
+    const ac=css("--accent");
+    const g=x.createConicGradient? x.createConicGradient(a,cx,cy):null;
+    if(g){ g.addColorStop(0, ac+"00"); g.addColorStop(0.14, ac+"55"); g.addColorStop(0.16, ac+"00"); x.fillStyle=g; x.beginPath(); x.arc(cx,cy,25,0,7); x.fill(); }
+    x.fillStyle=ac; x.beginPath(); x.arc(cx,cy,2.4,0,7); x.fill();
+    a+=0.03; if(!reduce) raf=requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ---------- controls ----------
+function buildControls(){
+  const st=document.getElementById("state");
+  st.innerHTML = STATES.map(s=>`<option ${s===profile.state?"selected":""}>${s}</option>`).join("");
+  st.onchange = e=>{ profile.state=e.target.value; render(); };
+
+  const en=document.getElementById("entity");
+  en.innerHTML = ENTITY.map(([v,t])=>`<option value="${v}" ${v===profile.entity_type?"selected":""}>${t}</option>`).join("");
+  en.onchange = e=>{ profile.entity_type=e.target.value; render(); };
+
+  const u=document.getElementById("uses");
+  u.innerHTML = USES.map(([v,t])=>`<button class="chip" type="button" data-v="${v}" aria-pressed="${profile.use_cases.includes(v)}">${t}</button>`).join("");
+  u.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick=()=>{ const v=ch.dataset.v; const i=profile.use_cases.indexOf(v);
+      if(i>=0) profile.use_cases.splice(i,1); else profile.use_cases.push(v);
+      ch.setAttribute("aria-pressed", i<0); render(); };
+  });
+
+  const pt=document.getElementById("proToggle");
+  const flip=()=>{ proPreview=!proPreview; pt.setAttribute("aria-pressed",proPreview); render(); };
+  pt.onclick=flip;
+  pt.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); flip(); } };
+}
+
+// ---------- theme ----------
+document.getElementById("themeBtn").onclick=()=>{
+  const cur=document.documentElement.getAttribute("data-theme")
+    || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  document.documentElement.setAttribute("data-theme", cur==="dark"?"light":"dark");
+};
+
+buildControls();
+render();
+</script>

@@ -1,0 +1,3 @@
+requests>=2.31.0
+# Optional — only if you wire the AI extractor in extract.py:
+# anthropic>=0.40.0
